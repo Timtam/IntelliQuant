@@ -154,6 +154,7 @@ end
 
 return {
   deserializeTable = deserializeTable,
+  getActiveMediaItem = getActiveMediaItem,
   getActiveMidiTake = getActiveMidiTake,
   getGridUnitLength = getGridUnitLength,
   getItemPPQ = getItemPPQ,

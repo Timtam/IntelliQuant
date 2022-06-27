@@ -53,6 +53,8 @@ local function main()
   reaper.MIDI_DisableSort(take)
   math.randomseed(os.time())
 
+  reaper.Undo_BeginBlock()
+
   while noteCount >= 0 do
     local success, selected, muted, startPPQ, endPPQ, channel, pitch, velocity = reaper.MIDI_GetNote(take, 1)
 
@@ -128,6 +130,9 @@ local function main()
   end
 
   reaper.MIDI_Sort(take)
+  reaper.Undo_OnStateChange_Item(0, "IntelliQuant: quantize", IntelliQuant.getActiveMediaItem())
+  reaper.Undo_EndBlock("IntelliQuant: quantize", 0)
+
 end
 
 main()
