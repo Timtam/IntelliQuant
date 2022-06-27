@@ -109,9 +109,9 @@ end
 local function getGridUnitLength()
 
   local gridLengthQN = reaper.MIDI_GetGrid(getActiveMidiTake())
-  local mediaItemPlusGridLengthPPQ = reaper.MIDI_GetPPQPosFromProjQN(getActiveMidiTake(), getMediaItemStartPositionQN() + gridLengthQN)
-  local mediaItemPlusGridLength = reaper.MIDI_GetProjTimeFromPPQPos(getActiveMidiTake(), mediaItemPlusGridLengthPPQ)
-  return mediaItemPlusGridLength - getMediaItemStartPosition()
+  local gridLengthPPQ = reaper.MIDI_GetPPQPosFromProjQN(getActiveMidiTake(), gridLengthQN)
+  local gridLength = reaper.MIDI_GetProjTimeFromPPQPos(getActiveMidiTake(), gridLengthPPQ)
+  return gridLength
 end
 
 local function getNextNoteLength()
@@ -166,6 +166,29 @@ local function insertMidiNotes(...)
   reaper.SetEditCurPos(endPosition, true, false)
 end
 
+local function requestUserConfiguration(valueName, title)
+
+  local tValue = deserializeTable(getValue(valueName, '{}'))
+
+  local sValue = tostring(tValue.adjustment_lookahead or 0) .. "," .. tostring(tValue.adjustment_lookbehind or 0) .. "," .. tostring(tValue.detection_lookahead or 0) .. "," .. tostring(tValue.detection_lookbehind or 0)
+
+  local success, sValue = reaper.GetUserInputs(title, 4, "Lookahead for adjustment window in %,Lookbehind for adjustment window in %,Lookahead for detection window in %,Lookbehind for detection window in %", sValue)
+
+  if not success then
+    return
+  end
+  
+  local adjustment_la, adjustment_lb, detection_la, detection_lb = string.match(sValue, "(%d+),(%d+),(%d+),(%d+)")
+
+  tValue.adjustment_lookahead = tonumber(adjustment_la)
+  tValue.adjustment_lookbehind = tonumber(adjustment_lb)
+  tValue.detection_lookahead = tonumber(detection_la)
+  tValue.detection_lookbehind = tonumber(detection_lb)
+  
+  setValue(valueName, serializeTable(tValue))
+
+end
+
 return {
   deserializeTable = deserializeTable,
   getValue = getValue,
@@ -173,6 +196,7 @@ return {
   insertMidiNotes = insertMidiNotes,
   map = map,
   print = print,
+  requestUserConfiguration = requestUserConfiguration,
   serializeTable = serializeTable,
   setValue = setValue,
   setValuePersist = setValuePersist,
