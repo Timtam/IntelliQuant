@@ -66,7 +66,7 @@ local function print(message)
     message = serializeTable(message)
   end
 
-  reaper.ShowConsoleMsg("AccessiChords: "..tostring(message).."\n")
+  reaper.ShowConsoleMsg("IntelliQuant: "..tostring(message).."\n")
 end
 
 local function speak(text)
@@ -98,72 +98,23 @@ local function getMediaItemStartPosition()
   return reaper.GetMediaItemInfo_Value(getActiveMediaItem(), "D_POSITION")
 end
 
+local function getMediaItemLength()
+  return reaper.GetMediaItemInfo_Value(getActiveMediaItem(), "D_LENGTH")
+end
+
 local function getMediaItemStartPositionPPQ()
   return reaper.MIDI_GetPPQPosFromProjTime(getActiveMidiTake(), getMediaItemStartPosition())
 end
 
-local function getMediaItemStartPositionQN()
-  return reaper.MIDI_GetProjQNFromPPQPos(getActiveMidiTake(), getMediaItemStartPositionPPQ())
+local function getMediaItemEndPositionPPQ()
+  return getMediaItemStartPositionPPQ() + reaper.MIDI_GetPPQPosFromProjTime(getActiveMidiTake(), getMediaItemLength())
 end
 
 local function getGridUnitLength()
 
   local gridLengthQN = reaper.MIDI_GetGrid(getActiveMidiTake())
   local gridLengthPPQ = reaper.MIDI_GetPPQPosFromProjQN(getActiveMidiTake(), gridLengthQN)
-  local gridLength = reaper.MIDI_GetProjTimeFromPPQPos(getActiveMidiTake(), gridLengthPPQ)
-  return gridLength
-end
-
-local function getNextNoteLength()
-
-  local activeMidiEditor = reaper.MIDIEditor_GetActive()
-  
-  if activeMidiEditor == nil then
-    return 0
-  end
-  
-  local noteLen = reaper.MIDIEditor_GetSetting_int(activeMidiEditor, "default_note_len")
-
-  if noteLen == 0 then
-    return 0
-  end
-
-  return reaper.MIDI_GetProjTimeFromPPQPos(getActiveMidiTake(), noteLen)
-end
-
-local function getMidiEndPositionPPQ()
-
-  local startPosition = getCursorPosition()
-  local startPositionPPQ = getCursorPositionPPQ()
-
-  local noteLength = getNextNoteLength()
-  
-  if noteLength == 0 then
-    noteLength = getGridUnitLength()
-  end
-
-  local endPositionPPQ = reaper.MIDI_GetPPQPosFromProjTime(getActiveMidiTake(), startPosition+noteLength)
-
-  return endPositionPPQ
-end
-
-local function insertMidiNotes(...)
-
-  local startPositionPPQ = getCursorPositionPPQ()
-  local endPositionPPQ = getMidiEndPositionPPQ()
-
-  local channel = getCurrentNoteChannel()
-  local take = getActiveMidiTake()
-  local velocity = getCurrentVelocity()
-  local _, note
-
-  for _, note in pairs({...}) do
-    reaper.MIDI_InsertNote(take, false, false, startPositionPPQ, endPositionPPQ, channel, note, velocity, false)
-  end
-
-  local endPosition = reaper.MIDI_GetProjTimeFromPPQPos(take, endPositionPPQ)
-
-  reaper.SetEditCurPos(endPosition, true, false)
+  return gridLengthPPQ
 end
 
 local function requestUserConfiguration(valueName, title)
@@ -189,11 +140,27 @@ local function requestUserConfiguration(valueName, title)
 
 end
 
+local function getItemPPQ()
+
+  local take = getActiveMidiTake()
+  local item = getActiveMediaItem()
+  local position = reaper.GetMediaItemInfo_Value(item, 'D_POSITION')
+  local offset   = reaper.GetMediaItemTakeInfo_Value(take, 'D_STARTOFFS')
+  local qn = reaper.TimeMap2_timeToQN(nil, position - offset)
+  ppq = reaper.MIDI_GetPPQPosFromProjQN(take, qn + 1)
+
+  return ppq
+end
+
 return {
   deserializeTable = deserializeTable,
+  getActiveMidiTake = getActiveMidiTake,
+  getGridUnitLength = getGridUnitLength,
+  getItemPPQ = getItemPPQ,
+  getMediaItemEndPositionPPQ = getMediaItemEndPositionPPQ,
+  getMediaItemStartPositionPPQ = getMediaItemStartPositionPPQ,
   getValue = getValue,
   getValuePersist = getValuePersist,
-  insertMidiNotes = insertMidiNotes,
   map = map,
   print = print,
   requestUserConfiguration = requestUserConfiguration,
