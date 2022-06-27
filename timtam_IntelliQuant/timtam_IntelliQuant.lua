@@ -110,13 +110,6 @@ local function getMediaItemEndPositionPPQ()
   return getMediaItemStartPositionPPQ() + reaper.MIDI_GetPPQPosFromProjTime(getActiveMidiTake(), getMediaItemLength())
 end
 
-local function getGridUnitLength()
-
-  local gridLengthQN = reaper.MIDI_GetGrid(getActiveMidiTake())
-  local gridLengthPPQ = reaper.MIDI_GetPPQPosFromProjQN(getActiveMidiTake(), gridLengthQN)
-  return gridLengthPPQ
-end
-
 local function requestUserConfiguration(valueName, title)
 
   local tValue = deserializeTable(getValue(valueName, '{}'))
@@ -150,6 +143,12 @@ local function getItemPPQ()
   ppq = reaper.MIDI_GetPPQPosFromProjQN(take, qn + 1)
 
   return ppq
+end
+
+local function getGridUnitLength()
+
+  local gridLengthQN = reaper.MIDI_GetGrid(getActiveMidiTake())
+  return gridLengthQN * getItemPPQ()
 end
 
 return {
