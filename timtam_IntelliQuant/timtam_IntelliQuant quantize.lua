@@ -55,8 +55,8 @@ local function main()
 
   reaper.Undo_BeginBlock()
 
-  while noteCount >= 0 do
-    local success, selected, muted, startPPQ, endPPQ, channel, pitch, velocity = reaper.MIDI_GetNote(take, 1)
+  while noteCount > 0 do
+    local success, selected, muted, startPPQ, endPPQ, channel, pitch, velocity = reaper.MIDI_GetNote(take, 0)
 
     local previousCenter = (startPPQ // gridLengthPPQ) * gridLengthPPQ
     local nextCenter = previousCenter + gridLengthPPQ
@@ -113,7 +113,7 @@ local function main()
       nextDetectionWindow = nil
     end
         
-    reaper.MIDI_DeleteNote(take, 1)
+    reaper.MIDI_DeleteNote(take, 0)
 
     local offset = 0
 
