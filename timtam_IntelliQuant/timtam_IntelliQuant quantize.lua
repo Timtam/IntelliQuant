@@ -22,6 +22,12 @@ local function main()
     sValue = IntelliQuant.getValue("8parameters", '{}')
   elseif gridLength == 1 then
     sValue = IntelliQuant.getValue("4parameters", '{}')
+  elseif gridLength == 3 then
+    sValue = IntelliQuant.getValue("8tparameters", '{}')
+  elseif gridLength == 6 then
+    sValue = IntelliQuant.getValue("16tparameters", '{}')
+  elseif gridLength == 5 then
+    sValue = IntelliQuant.getValue("quintupletparameters", '{}')
   else
     IntelliQuant.speak("Unsupported grid length found, aborting.")
     return
