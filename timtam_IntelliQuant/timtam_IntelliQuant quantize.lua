@@ -68,7 +68,7 @@ local function main()
     local success, selected, muted, startPPQ, endPPQ, channel, pitch, velocity = reaper.MIDI_GetNote(take, 0)
     local offset = 0
 
-    if startPPQ - previousNoteStartPPQ <= math.floor(tValue.flam * itemPPQ / 100) then
+    if (tValue.flam or 0) > 0 and startPPQ - previousNoteStartPPQ <= math.floor(tValue.flam * itemPPQ / 100) then
       offset = previousOffset
     else
 
