@@ -72,6 +72,8 @@ local function main()
       offset = previousOffset
     else
 
+      previousNoteStartPPQ = startPPQ
+
       local previousCenter = (startPPQ // gridLengthPPQ) * gridLengthPPQ
       local nextCenter = previousCenter + gridLengthPPQ
 
