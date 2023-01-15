@@ -61,77 +61,88 @@ local function main()
 
   reaper.Undo_BeginBlock()
 
+  local previousNoteStartPPQ = 0
+  local previousOffset = 0
+
   while noteCount > 0 do
     local success, selected, muted, startPPQ, endPPQ, channel, pitch, velocity = reaper.MIDI_GetNote(take, 0)
-
-    local previousCenter = (startPPQ // gridLengthPPQ) * gridLengthPPQ
-    local nextCenter = previousCenter + gridLengthPPQ
-
-    local previousAdjustmentWindow = {
-      min = previousCenter,
-      max = previousCenter + math.floor(tValue.adjustment_lookahead * itemPPQ / 100)
-    }
-
-    if previousAdjustmentWindow.min < itemStartPositionPPQ and previousAdjustmentWindow.max >= itemStartPositionPPQ then
-      previousAdjustmentWindow.min = itemStartPositionPPQ
-    elseif previousAdjustmentWindow.min <= itemEndPositionPPQ and previousAdjustmentWindow.max > itemEndPositionPPQ then
-      previousAdjustmentWindow.max = itemEndPositionPPQ
-    elseif (previousAdjustmentWindow.min < itemStartPositionPPQ) and (previousAdjustmentWindow.max < itemStartPositionPPQ or previousAdjustmentWindow.max > itemEndPositionPPQ) then
-      previousAdjustmentWindow = nil
-    end
-
-    local nextAdjustmentWindow = {
-      min = nextCenter - math.floor(tValue.adjustment_lookbehind * itemPPQ / 100),
-      max = nextCenter
-    }
-
-    if nextAdjustmentWindow.min < itemStartPositionPPQ and nextAdjustmentWindow.max >= itemStartPositionPPQ then
-      nextAdjustmentWindow.min = itemStartPositionPPQ
-    elseif nextAdjustmentWindow.min <= itemEndPositionPPQ and nextAdjustmentWindow.max > itemEndPositionPPQ then
-      nextAdjustmentWindow.max = itemEndPositionPPQ
-    elseif (nextAdjustmentWindow.min < itemStartPositionPPQ) and (nextAdjustmentWindow.max < itemStartPositionPPQ or nextAdjustmentWindow.max > itemEndPositionPPQ) then
-      nextAdjustmentWindow = nil
-    end
-
-    local previousDetectionWindow = {
-      min = previousCenter,
-      max = previousCenter + math.floor(tValue.detection_lookahead * itemPPQ / 100)
-    }
-
-    if previousDetectionWindow.min < itemStartPositionPPQ and previousDetectionWindow.max >= itemStartPositionPPQ then
-      previousDetectionWindow.min = itemStartPositionPPQ
-    elseif previousDetectionWindow.min <= itemEndPositionPPQ and previousDetectionWindow.max > itemEndPositionPPQ then
-      previousDetectionWindow.max = itemEndPositionPPQ
-    elseif (previousDetectionWindow.min < itemStartPositionPPQ) and (previousDetectionWindow.max < itemStartPositionPPQ or previousDetectionWindow.max > itemEndPositionPPQ) then
-      previousDetectionWindow = nil
-    end
-
-    local nextDetectionWindow = {
-      min = nextCenter - math.floor(tValue.detection_lookbehind * itemPPQ / 100),
-      max = nextCenter
-    }
-
-    if nextDetectionWindow.min < itemStartPositionPPQ and nextDetectionWindow.max >= itemStartPositionPPQ then
-      nextDetectionWindow.min = itemStartPositionPPQ
-    elseif nextDetectionWindow.min <= itemEndPositionPPQ and nextDetectionWindow.max > itemEndPositionPPQ then
-      nextDetectionWindow.max = itemEndPositionPPQ
-    elseif (nextDetectionWindow.min < itemStartPositionPPQ) and (nextDetectionWindow.max < itemStartPositionPPQ or nextDetectionWindow.max > itemEndPositionPPQ) then
-      nextDetectionWindow = nil
-    end
-        
-    reaper.MIDI_DeleteNote(take, 0)
-
     local offset = 0
 
-    if previousAdjustmentWindow ~= nil and previousDetectionWindow ~= nil and startPPQ < previousDetectionWindow.max and startPPQ > previousAdjustmentWindow.max then
-      offset = math.random(previousAdjustmentWindow.min, previousAdjustmentWindow.max) - startPPQ
-    elseif nextDetectionWindow ~= nil and nextAdjustmentWindow ~= nil and startPPQ > nextDetectionWindow.min and startPPQ < nextAdjustmentWindow.min then
-      offset = math.random(nextAdjustmentWindow.min, nextAdjustmentWindow.max) - startPPQ
+    if startPPQ - previousNoteStartPPQ <= math.floor(tValue.flam * itemPPQ / 100) then
+      offset = previousOffset
+    else
+
+      local previousCenter = (startPPQ // gridLengthPPQ) * gridLengthPPQ
+      local nextCenter = previousCenter + gridLengthPPQ
+
+      local previousAdjustmentWindow = {
+        min = previousCenter,
+        max = previousCenter + math.floor(tValue.adjustment_lookahead * itemPPQ / 100)
+      }
+
+      if previousAdjustmentWindow.min < itemStartPositionPPQ and previousAdjustmentWindow.max >= itemStartPositionPPQ then
+        previousAdjustmentWindow.min = itemStartPositionPPQ
+      elseif previousAdjustmentWindow.min <= itemEndPositionPPQ and previousAdjustmentWindow.max > itemEndPositionPPQ then
+        previousAdjustmentWindow.max = itemEndPositionPPQ
+      elseif (previousAdjustmentWindow.min < itemStartPositionPPQ) and (previousAdjustmentWindow.max < itemStartPositionPPQ or previousAdjustmentWindow.max > itemEndPositionPPQ) then
+        previousAdjustmentWindow = nil
+      end
+
+      local nextAdjustmentWindow = {
+        min = nextCenter - math.floor(tValue.adjustment_lookbehind * itemPPQ / 100),
+        max = nextCenter
+      }
+
+      if nextAdjustmentWindow.min < itemStartPositionPPQ and nextAdjustmentWindow.max >= itemStartPositionPPQ then
+        nextAdjustmentWindow.min = itemStartPositionPPQ
+      elseif nextAdjustmentWindow.min <= itemEndPositionPPQ and nextAdjustmentWindow.max > itemEndPositionPPQ then
+        nextAdjustmentWindow.max = itemEndPositionPPQ
+      elseif (nextAdjustmentWindow.min < itemStartPositionPPQ) and (nextAdjustmentWindow.max < itemStartPositionPPQ or nextAdjustmentWindow.max > itemEndPositionPPQ) then
+        nextAdjustmentWindow = nil
+      end
+
+      local previousDetectionWindow = {
+        min = previousCenter,
+        max = previousCenter + math.floor(tValue.detection_lookahead * itemPPQ / 100)
+      }
+
+      if previousDetectionWindow.min < itemStartPositionPPQ and previousDetectionWindow.max >= itemStartPositionPPQ then
+        previousDetectionWindow.min = itemStartPositionPPQ
+      elseif previousDetectionWindow.min <= itemEndPositionPPQ and previousDetectionWindow.max > itemEndPositionPPQ then
+        previousDetectionWindow.max = itemEndPositionPPQ
+      elseif (previousDetectionWindow.min < itemStartPositionPPQ) and (previousDetectionWindow.max < itemStartPositionPPQ or previousDetectionWindow.max > itemEndPositionPPQ) then
+        previousDetectionWindow = nil
+      end
+
+      local nextDetectionWindow = {
+        min = nextCenter - math.floor(tValue.detection_lookbehind * itemPPQ / 100),
+        max = nextCenter
+      }
+
+      if nextDetectionWindow.min < itemStartPositionPPQ and nextDetectionWindow.max >= itemStartPositionPPQ then
+        nextDetectionWindow.min = itemStartPositionPPQ
+      elseif nextDetectionWindow.min <= itemEndPositionPPQ and nextDetectionWindow.max > itemEndPositionPPQ then
+        nextDetectionWindow.max = itemEndPositionPPQ
+      elseif (nextDetectionWindow.min < itemStartPositionPPQ) and (nextDetectionWindow.max < itemStartPositionPPQ or nextDetectionWindow.max > itemEndPositionPPQ) then
+        nextDetectionWindow = nil
+      end
+    end
+
+    reaper.MIDI_DeleteNote(take, 0)
+
+    if offset == 0 then
+      if previousAdjustmentWindow ~= nil and previousDetectionWindow ~= nil and startPPQ < previousDetectionWindow.max and startPPQ > previousAdjustmentWindow.max then
+        offset = math.random(previousAdjustmentWindow.min, previousAdjustmentWindow.max) - startPPQ
+      elseif nextDetectionWindow ~= nil and nextAdjustmentWindow ~= nil and startPPQ > nextDetectionWindow.min and startPPQ < nextAdjustmentWindow.min then
+        offset = math.random(nextAdjustmentWindow.min, nextAdjustmentWindow.max) - startPPQ
+      end
     end
 
     reaper.MIDI_InsertNote(take, selected, muted, startPPQ + offset, endPPQ + offset, channel, pitch, velocity, true)
 
     noteCount = noteCount - 1
+
+    previousOffset = offset
 
   end
 

@@ -114,20 +114,21 @@ local function requestUserConfiguration(valueName, title)
 
   local tValue = deserializeTable(getValue(valueName, '{}'))
 
-  local sValue = tostring(tValue.adjustment_lookahead or 0) .. "," .. tostring(tValue.adjustment_lookbehind or 0) .. "," .. tostring(tValue.detection_lookahead or 0) .. "," .. tostring(tValue.detection_lookbehind or 0)
+  local sValue = tostring(tValue.adjustment_lookahead or 0) .. "," .. tostring(tValue.adjustment_lookbehind or 0) .. "," .. tostring(tValue.detection_lookahead or 0) .. "," .. tostring(tValue.detection_lookbehind or 0) .. "," .. tostring(tValue.flam or 0)
 
-  local success, sValue = reaper.GetUserInputs(title, 4, "Lookahead for adjustment window in %,Lookbehind for adjustment window in %,Lookahead for detection window in %,Lookbehind for detection window in %", sValue)
+  local success, sValue = reaper.GetUserInputs(title, 5, "Lookahead for adjustment window in %,Lookbehind for adjustment window in %,Lookahead for detection window in %,Lookbehind for detection window in %,Flam detection window in % (enter 0 to disable)", sValue)
 
   if not success then
     return
   end
   
-  local adjustment_la, adjustment_lb, detection_la, detection_lb = string.match(sValue, "(%d+),(%d+),(%d+),(%d+)")
+  local adjustment_la, adjustment_lb, detection_la, detection_lb, flam = string.match(sValue, "(%d+),(%d+),(%d+),(%d+),(%d+)")
 
   tValue.adjustment_lookahead = tonumber(adjustment_la)
   tValue.adjustment_lookbehind = tonumber(adjustment_lb)
   tValue.detection_lookahead = tonumber(detection_la)
   tValue.detection_lookbehind = tonumber(detection_lb)
+  tValue.flam = tonumber(flam)
   
   setValue(valueName, serializeTable(tValue))
 
