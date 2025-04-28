@@ -152,6 +152,26 @@ local function getGridUnitLength()
   return gridLengthQN * getItemPPQ()
 end
 
+local function getParametersForGridLength(gridLength)
+  if gridLength == 8 then
+    return getValue("32parameters", '{}')
+  elseif gridLength == 4 then
+    return getValue("16parameters", '{}')
+  elseif gridLength == 2 then
+    return getValue("8parameters", '{}')
+  elseif gridLength == 1 then
+    return getValue("4parameters", '{}')
+  elseif gridLength == 3 then
+    return getValue("8tparameters", '{}')
+  elseif gridLength == 6 then
+    return getValue("16tparameters", '{}')
+  elseif gridLength == 5 then
+    return getValue("quintupletparameters", '{}')
+  else
+    return nil
+  end
+end
+
 return {
   deserializeTable = deserializeTable,
   getActiveMediaItem = getActiveMediaItem,
@@ -160,6 +180,7 @@ return {
   getItemPPQ = getItemPPQ,
   getMediaItemEndPositionPPQ = getMediaItemEndPositionPPQ,
   getMediaItemStartPositionPPQ = getMediaItemStartPositionPPQ,
+  getParametersForGridLength = getParametersForGridLength,
   getValue = getValue,
   getValuePersist = getValuePersist,
   map = map,
